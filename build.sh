@@ -226,6 +226,9 @@ dm()
       chroot ${uzip} sed -i '' -e 's/memorylocked=128M/memorylocked=256M/' /etc/login.conf
       chroot ${uzip} cap_mkdb /etc/login.conf
       ;;
+    'xfce')
+      cp ${cwd}/sddm.conf-xfce ${uzip}/usr/local/etc/sddm.conf
+      ;;
   esac
 }
 
