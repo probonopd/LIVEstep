@@ -90,7 +90,7 @@ workspace()
     rm ${livecd}/pool.img
   fi
   if [ -d "${livecd}" ] ;then
-    chflags -R noschg ${uzip} ${cdroot} >/dev/null 2>/dev/null || true
+    # chflags -R noschg ${uzip} ${cdroot} >/dev/null 2>/dev/null || true
     rm -rf ${uzip} ${cdroot} ${ports} >/dev/null 2>/dev/null || true
   fi
   mkdir -p ${livecd} ${base} ${iso} ${packages} ${uzip} ${ramdisk_root}/dev ${ramdisk_root}/etc >/dev/null 2>/dev/null
@@ -200,7 +200,6 @@ opt()
 user()
 {
   mkdir -p ${uzip}/usr/home/liveuser/Desktop
-  cp -R ${cwd}/xorg.conf.d/ ${uzip}/usr/home/liveuser/xorg.conf.d
   chroot ${uzip} echo furybsd | chroot ${uzip} pw mod user root -h 0
   chroot ${uzip} pw useradd liveuser -u 1000 \
   -c "Live User" -d "/home/liveuser" \
@@ -236,7 +235,7 @@ pkg()
   cd "${packages}"
   while read p; do
     echo "pkg #########################"
-    sh -ex "${cwd}"/build-pkg.sh -m "${cwd}"/overlays/uzip/"${p}"/manifest -d "${cwd}"/overlays/uzip/"${p}/files"
+    sh -ex "${cwd}"/scripts/build-pkg.sh -m "${cwd}"/overlays/uzip/"${p}"/manifest -d "${cwd}"/overlays/uzip/"${p}/files"
   done <"${cwd}"/settings/overlays.common
   cd -
 }
@@ -271,12 +270,14 @@ boot()
 image() 
 {
   sh ${cwd}/scripts/mkisoimages.sh -b $label $isopath ${cdroot}
+  md5 $isopath > $isopath.md5
+
 }
 
 cleanup()
 {
   if [ -d "${livecd}" ] ; then
-    chflags -R noschg ${uzip} ${cdroot} >/dev/null 2>/dev/null
+    # chflags -R noschg ${uzip} ${cdroot} >/dev/null 2>/dev/null
     rm -rf ${uzip} ${cdroot} ${ports} >/dev/null 2>/dev/null
   fi
 }
