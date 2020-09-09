@@ -94,9 +94,11 @@ workspace()
     rm -rf ${uzip} ${cdroot} ${ports} >/dev/null 2>/dev/null
   fi
   mkdir -p ${livecd} ${base} ${iso} ${packages} ${uzip} ${ramdisk_root}/dev ${ramdisk_root}/etc >/dev/null 2>/dev/null
-  truncate -s 4g ${livecd}/pool.img
+  truncate -s 3g ${livecd}/pool.img
   mdconfig -f ${livecd}/pool.img -u 0
-  zpool create furybsd /dev/md0
+  gpart create -s GPT md0
+  gpart add -t freebsd-zfs md0
+  zpool create furybsd /dev/md0p1
   zfs set mountpoint=${uzip} furybsd
   zfs set compression=gzip-6 furybsd
 }
@@ -114,8 +116,8 @@ base()
   fi
   bsdinstall distextract
   cp /etc/resolv.conf ${uzip}/etc/resolv.conf
-  ### chroot ${uzip} env PAGER=cat freebsd-update fetch --not-running-from-cron
-  ### chroot ${uzip} freebsd-update install
+  chroot ${uzip} env PAGER=cat freebsd-update fetch --not-running-from-cron
+  chroot ${uzip} freebsd-update install
   rm ${uzip}/etc/resolv.conf
 }
 
@@ -185,7 +187,7 @@ opt()
   mkdir -p ${uzip}/opt/local/bin
   mkdir -p ${uzip}/opt/local/share/backgrounds/furybsd
   cp ${cache}/furybsd-xorg-tool/bin/* ${uzip}/opt/local/bin/
-  # cp -R ${cache}/furybsd-wallpapers/*.png ${uzip}/opt/local/share/backgrounds/furybsd/
+  cp -R ${cache}/furybsd-wallpapers/*.png ${uzip}/opt/local/share/backgrounds/furybsd/
   cp ${cache}/furybsd-wifi-tool/bin/* ${uzip}/opt/local/bin/
 }
 
@@ -219,7 +221,7 @@ dm()
       ;;
     'lumina')
       ;;
-    *)
+    'mate')
       cp ${cwd}/lightdm.conf ${uzip}/usr/local/etc/lightdm/
       chroot ${uzip} sed -i '' -e 's/memorylocked=128M/memorylocked=256M/' /etc/login.conf
       chroot ${uzip} cap_mkdb /etc/login.conf
@@ -261,9 +263,7 @@ ramdisk()
 boot() 
 {
   cp -R ${cwd}/overlays/boot/ ${cdroot}
-  cd "${uzip}" && tar -cf - --exclude boot/kernel boot | tar -xf - -C "${cdroot}"
-  for kfile in kernel geom_uzip.ko nullfs.ko tmpfs.ko opensolaris.ko unionfs.ko xz.ko zfs.ko; do
-  tar -cf - boot/kernel/${kfile} | tar -xf - -C "${cdroot}"
+  cd "${uzip}" && tar -cf - boot | tar -xf - -C "${cdroot}"
   done
 }
 
@@ -276,7 +276,7 @@ cleanup()
 {
   if [ -d "${livecd}" ] ; then
     chflags -R noschg ${uzip} ${cdroot} >/dev/null 2>/dev/null
-    rm -rf ${uzip} ${cdroot} >/dev/null 2>/dev/null
+    rm -rf ${uzip} ${cdroot} ${ports} >/dev/null 2>/dev/null
   fi
 }
 
