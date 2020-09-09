@@ -130,8 +130,14 @@ packages()
   while read p; do
     pkg-static -c ${uzip} install -y /var/cache/pkg/"${p}"-0.txz
   done <"${cwd}"/settings/overlays.common
-  cat ${cwd}/settings/packages.common | xargs pkg-static -c ${uzip} install -y
+  cat "${cwd}/settings/packages.common" | xargs pkg-static -c "${uzip}" install -y
   cat ${cwd}/settings/packages.${desktop} | xargs pkg-static -c ${uzip} install -y
+  if [ -f "${cwd}/settings/overlays.{$desktop}" ] ; then
+    while read p; do
+      pkg-static -c ${uzip} install -y /var/cache/pkg/"${p}"-0.txz
+    done <"${cwd}/settings/overlays.{$desktop}"
+  cat "${cwd}/settings/packages.${desktop}" | xargs pkg-static -c "${uzip}" install -y
+  fi
   rm ${uzip}/etc/resolv.conf
   umount ${uzip}/var/cache/pkg
   umount ${uzip}/dev
@@ -195,9 +201,6 @@ user()
 {
   mkdir -p ${uzip}/usr/home/liveuser/Desktop
   cp -R ${cwd}/xorg.conf.d/ ${uzip}/usr/home/liveuser/xorg.conf.d
-  cp ${cwd}/fury-config-xorg.desktop ${uzip}/usr/home/liveuser/Desktop/
-  cp ${cwd}/fury-config-wifi.desktop ${uzip}/usr/home/liveuser/Desktop/
-  cp ${cwd}/fury-install.desktop ${uzip}/usr/home/liveuser/Desktop/
   chroot ${uzip} echo furybsd | chroot ${uzip} pw mod user root -h 0
   chroot ${uzip} pw useradd liveuser -u 1000 \
   -c "Live User" -d "/home/liveuser" \
@@ -214,20 +217,16 @@ dm()
 {
   case $desktop in
     'kde')
-      cp ${cwd}/sddm.conf ${uzip}/usr/local/etc/
       ;;
     'gnome')
-      cp ${cwd}/custom.conf ${uzip}/usr/local/etc/gdm/custom.conf
       ;;
     'lumina')
       ;;
     'mate')
-      cp ${cwd}/lightdm.conf ${uzip}/usr/local/etc/lightdm/
       chroot ${uzip} sed -i '' -e 's/memorylocked=128M/memorylocked=256M/' /etc/login.conf
       chroot ${uzip} cap_mkdb /etc/login.conf
       ;;
     'xfce')
-      cp ${cwd}/sddm.conf-xfce ${uzip}/usr/local/etc/sddm.conf
       ;;
   esac
 }
