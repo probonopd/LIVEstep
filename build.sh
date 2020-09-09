@@ -90,8 +90,8 @@ workspace()
     rm ${livecd}/pool.img
   fi
   if [ -d "${livecd}" ] ;then
-    chflags -R noschg ${uzip} ${cdroot} >/dev/null 2>/dev/null
-    rm -rf ${uzip} ${cdroot} ${ports} >/dev/null 2>/dev/null
+    chflags -R noschg ${uzip} ${cdroot} >/dev/null 2>/dev/null || true
+    rm -rf ${uzip} ${cdroot} ${ports} >/dev/null 2>/dev/null || true
   fi
   mkdir -p ${livecd} ${base} ${iso} ${packages} ${uzip} ${ramdisk_root}/dev ${ramdisk_root}/etc >/dev/null 2>/dev/null
   truncate -s 3g ${livecd}/pool.img
@@ -267,7 +267,6 @@ boot()
 {
   cp -R ${cwd}/overlays/boot/ ${cdroot}
   cd "${uzip}" && tar -cf - boot | tar -xf - -C "${cdroot}"
-  done
 }
 
 image() 
