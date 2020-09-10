@@ -1,7 +1,7 @@
 freebsd_instance:
   image: freebsd-12-1-release-amd64
   cpu: 2
-  memory: 4G
+  memory: 16G
 
 env:
   CIRRUS_CLONE_DEPTH: 1
@@ -19,6 +19,8 @@ task:
     - kldload geom_uzip.ko
     - kldstat
     - pkg install -y pkg git-lite # qemu-devel uefi-edk2-qemu-x86_64
+    - mkdir -p /usr/local/furybsd
+    - mount -t tmpfs tmpfs /usr/local/furybsd
     
   test_script:
     - /bin/sh -x ./build.sh
