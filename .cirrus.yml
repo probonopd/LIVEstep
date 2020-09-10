@@ -21,14 +21,11 @@ task:
     - pkg install -y pkg git-lite # qemu-devel uefi-edk2-qemu-x86_64
     - mkdir -p /usr/local/furybsd
     - mount -t tmpfs tmpfs /usr/local/furybsd
-    # Use compression, https://prodevsblog.com/questions/780666/is-there-an-in-memory-compressed-swap-facility-like-compcache-for-freebsd/
-    # mdconfig -a -t malloc -o compress -o reserve -s 6g -u 7
-    # newfs -U /dev/md7
-    # mount /dev/md7 /usr/local/furybsd
     
   test_script:
     - /bin/sh -x ./build.sh
-    - ls -lh /usr/local/furybsd/iso/
+    - ls -lh /*.iso*
+    - df -h
     
   binaries_artifacts:
     path: "/*.iso*"
