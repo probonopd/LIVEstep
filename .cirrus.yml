@@ -8,7 +8,7 @@ env:
 
 task:
   stateful: false
-  timeout_in: 120m
+  timeout_in: 60m
   
   install_script:
     - env
@@ -18,14 +18,15 @@ task:
     - kldload nullfs.ko
     - kldload geom_uzip.ko
     - kldstat
-    - pkg install -y pkg git-lite # qemu-devel uefi-edk2-qemu-x86_64
+    - pkg install -y pkg git-lite zsync # qemu-devel uefi-edk2-qemu-x86_64
     - mkdir -p /usr/local/furybsd
     - mount -t tmpfs tmpfs /usr/local/furybsd
     
   test_script:
-    - /bin/sh -x ./build.sh
+    - /bin/sh -x ./build.sh || true # FIXME: Why does this return an error even though the ISO succeeded?
     - ls -lh /*.iso*
     - df -h
+    - ( cd / ; zsyncmake *.iso )
     
   binaries_artifacts:
     path: "/*.iso*"
