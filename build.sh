@@ -258,7 +258,7 @@ image()
   fi
   sh ${cwd}/scripts/mkisoimages.sh -b $label $isopath ${cdroot}
   md5 $isopath > $isopath.md5
-}  }
+}
 
 cleanup()
 {
