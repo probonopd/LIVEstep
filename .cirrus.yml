@@ -1,0 +1,21 @@
+freebsd_instance:
+  image: freebsd-12-1-release-amd64
+  cpu: 2
+  memory: 4G
+
+env:
+  CIRRUS_CLONE_DEPTH: 1
+
+task:
+  stateful: false
+  timeout_in: 120m
+  
+  install_script:
+    - pkg install -y git-lite # qemu-devel uefi-edk2-qemu-x86_64
+    
+  test_script:
+    - /bin/sh -x ./build.sh
+    - ls -lh /usr/local/furybsd/iso/
+    
+  binaries_artifacts:
+    path: "/usr/local/furybsd/iso/*"
