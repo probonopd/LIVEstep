@@ -21,7 +21,6 @@ setxkbmap
 xdg-user-dirs
 xdg-utils
 doas
-zenity
 xterm
 git
 bash

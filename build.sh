@@ -113,17 +113,20 @@ packages()
   mkdir ${uzip}/var/cache/pkg
   mount_nullfs ${packages} ${uzip}/var/cache/pkg
   mount -t devfs devfs ${uzip}/dev
+  cat "${cwd}/settings/packages.common" | xargs pkg-static -c "${uzip}" install -y
   while read p; do
     pkg-static -c ${uzip} install -y /var/cache/pkg/"${p}"-0.txz
   done <"${cwd}"/settings/overlays.common
-  cat "${cwd}/settings/packages.common" | xargs pkg-static -c "${uzip}" install -y
+  # TODO: Show dependency tree so that we know why which pkgs get installed
+  # cat "${cwd}/settings/packages.common" | xargs pkg-static -c "${uzip}" info -d
+  # cat "${cwd}/settings/packages.${desktop}" | xargs pkg-static -c "${uzip}" info -d
   cat ${cwd}/settings/packages.${desktop} | xargs pkg-static -c ${uzip} install -y
-  if [ -f "${cwd}/settings/overlays.{$desktop}" ] ; then
+  if [ -f "${cwd}/settings/overlays.${desktop}" ] ; then
     while read p; do
       pkg-static -c ${uzip} install -y /var/cache/pkg/"${p}"-0.txz
-    done <"${cwd}/settings/overlays.{$desktop}"
-  cat "${cwd}/settings/packages.${desktop}" | xargs pkg-static -c "${uzip}" install -y
+    done <"${cwd}/settings/overlays.${desktop}"
   fi
+  pkg-static -c ${uzip} info > "${cdroot}/data/system.uzip.packages"
   rm ${uzip}/etc/resolv.conf
   umount ${uzip}/var/cache/pkg
   umount ${uzip}/dev
@@ -144,11 +147,13 @@ rc()
 
 repos()
 {
-  if [ ! -d "${cwd}/overlays/uzip/furybsd-common-settings" ] ; then
-    git clone https://github.com/probonopd/furybsd-common-settings.git ${cwd}/overlays/uzip/furybsd-common-settings
-  else
-    cd ${cwd}/overlays/uzip/furybsd-common-settings && git pull
-  fi
+  # This is just an example of how a git repo needs to be structured
+  # so that it can be consumed directly here
+  # if [ ! -d "${cwd}/overlays/uzip/furybsd-common-settings" ] ; then
+  #   git clone https://github.com/probonopd/furybsd-common-settings.git ${cwd}/overlays/uzip/furybsd-common-settings
+  # else
+  #   cd ${cwd}/overlays/uzip/furybsd-common-settings && git pull
+  # fi
 
   # TODO: Move them to pkgs too, like common-settings
   if [ ! -d "${cache}/furybsd-wallpapers" ] ; then
@@ -156,36 +161,21 @@ repos()
   else
     cd ${cache}/furybsd-wallpapers && git pull
   fi
-  if [ ! -d "${cache}/furybsd-xorg-tool" ] ; then
-    git clone https://github.com/furybsd/furybsd-xorg-tool.git ${cache}/furybsd-xorg-tool
-  else
-    cd ${cache}/furybsd-xorg-tool && git pull
-  fi
-  if [ ! -d "${cache}/furybsd-wifi-tool" ] ; then
-    git clone https://github.com/furybsd/furybsd-wifi-tool.git ${cache}/furybsd-wifi-tool
-  else
-    cd ${cache}/furybsd-wifi-tool && git pull
-  fi
-}
 
-opt()
-{
-  mkdir -p ${uzip}/opt/local/bin
-  mkdir -p ${uzip}/opt/local/share/backgrounds/furybsd
-  cp ${cache}/furybsd-xorg-tool/bin/* ${uzip}/opt/local/bin/
-  cp -R ${cache}/furybsd-wallpapers/*.png ${uzip}/opt/local/share/backgrounds/furybsd/
-  cp ${cache}/furybsd-wifi-tool/bin/* ${uzip}/opt/local/bin/
+  cp -Rf ${cache}/furybsd-wallpapers/*.png ${cwd}/overlays/uzip/furybsd-wallpapers/files/opt/local/share/backgrounds/furybsd/
+
+
 }
 
 user()
 {
   mkdir -p ${uzip}/usr/home/liveuser/Desktop
-  chroot ${uzip} echo furybsd | chroot ${uzip} pw mod user root -h 0
+  # chroot ${uzip} echo furybsd | chroot ${uzip} pw mod user root -h 0
   chroot ${uzip} pw useradd liveuser -u 1000 \
   -c "Live User" -d "/home/liveuser" \
   -g wheel -G operator -m -s /bin/csh -k /usr/share/skel -w none
   chroot ${uzip} pw groupadd liveuser -g 1000
-  chroot ${uzip} echo furybsd | chroot ${uzip} pw mod user liveuser -h 0
+  # chroot ${uzip} echo furybsd | chroot ${uzip} pw mod user liveuser -h 0
   chroot ${uzip} chown -R 1000:1000 /usr/home/liveuser
   chroot ${uzip} pw groupmod wheel -m liveuser
   chroot ${uzip} pw groupmod video -m liveuser
@@ -217,6 +207,12 @@ pkg()
     echo "pkg #########################"
     sh -ex "${cwd}"/scripts/build-pkg.sh -m "${cwd}"/overlays/uzip/"${p}"/manifest -d "${cwd}"/overlays/uzip/"${p}/files"
   done <"${cwd}"/settings/overlays.common
+  if [ -f "${cwd}/settings/overlays.${desktop}" ] ; then
+    while read p; do
+      echo "pkg #########################"
+      sh -ex "${cwd}"/scripts/build-pkg.sh -m "${cwd}"/overlays/uzip/"${p}"/manifest -d "${cwd}"/overlays/uzip/"${p}/files"
+    done <"${cwd}/settings/overlays.${desktop}"
+  fi
   cd -
 }
 
@@ -251,7 +247,6 @@ image()
 {
   sh ${cwd}/scripts/mkisoimages.sh -b $label $isopath ${cdroot}
   md5 $isopath > $isopath.md5
-  echo "$isopath created"
 }
 
 cleanup()
@@ -260,15 +255,15 @@ cleanup()
     # chflags -R noschg ${uzip} ${cdroot} >/dev/null 2>/dev/null
     rm -rf ${uzip} ${cdroot} ${ports} >/dev/null 2>/dev/null
   fi
+  echo "$isopath created"
 }
 
 workspace
-base
 repos
 pkg
+base
 packages
 rc
-opt
 user
 dm
 uzip
