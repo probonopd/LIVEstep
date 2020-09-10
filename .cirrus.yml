@@ -11,10 +11,14 @@ task:
   timeout_in: 120m
   
   install_script:
+    - env
     - kldstat
-    - kldload zfs.ko || true
+    - kldload zfs.ko
+    - kldload tmpfs.ko # Needed?
+    - kldload nullfs.ko
+    - kldload geom_uzip.ko
     - kldstat
-    - pkg install -y git-lite # qemu-devel uefi-edk2-qemu-x86_64
+    - pkg install -y pkg git-lite # qemu-devel uefi-edk2-qemu-x86_64
     
   test_script:
     - /bin/sh -x ./build.sh
