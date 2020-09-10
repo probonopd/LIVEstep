@@ -8,4 +8,4 @@ Categories=
 Exec=doas /opt/local/bin/furybsd-xorg-tool
 Name=Configure Xorg
 Comment=Configure Xorg
-Icon=/usr/local/share/icons/Tango/scalable/devices/video-display.svg
+Icon=video-display

@@ -40,28 +40,14 @@ if [ ! -f "/usr/local/bin/git" ] ; then
   exit 1
 fi
 
-case $desktop in
-  'kde')
-    export desktop="kde"
-    export edition="KDE"
-    ;;
-  'gnome')
-    export desktop="gnome"
-    export edition="GNOME"
-    ;;
-  'lumina')
-    export desktop="lumina"
-    export edition="LUMINA"
-    ;;
-  'mate')
-    export desktop="mate"
-    export edition="MATE"
-    ;;
-  *)
-    export desktop="xfce"
-    export edition="XFCE"
-    ;;
-esac
+if [ -z "${desktop}" ] ; then
+  export desktop=xfce
+fi
+export edition=$(echo $desktop | tr '[:lower:]' '[:upper:]')
+if [ ! -f "${cwd}/settings/packages.${desktop}" ] ; then
+  echo "${cwd}/settings/packages.${desktop} is missing, exiting"
+  exit 1
+fi
 
 # Get the version tag
 if [ -z "$2" ] ; then
@@ -182,12 +168,6 @@ repos()
   fi
 }
 
-skel()
-{
-  mkdir -p ${uzip}/usr/share/skel/dot.config/xfce4/xfconf/xfce-perchannel-xml
-  cp -R ${cache}/furybsd-xfce-settings/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/* ${uzip}/usr/share/skel/dot.config/xfce4/xfconf/xfce-perchannel-xml/
-}
-
 opt()
 {
   mkdir -p ${uzip}/opt/local/bin
@@ -271,7 +251,7 @@ image()
 {
   sh ${cwd}/scripts/mkisoimages.sh -b $label $isopath ${cdroot}
   md5 $isopath > $isopath.md5
-
+  echo "$isopath created"
 }
 
 cleanup()
@@ -289,7 +269,6 @@ pkg
 packages
 rc
 opt
-skel
 user
 dm
 uzip

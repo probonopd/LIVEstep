@@ -10,4 +10,4 @@ Terminal=true
 Exec=doas /opt/local/bin/furybsd-install
 Name=Install FuryBSD
 Comment=Install FuryBSD
-Icon=/usr/local/share/icons/Tango/scalable/devices/harddrive.svg
+Icon=drive-harddisk

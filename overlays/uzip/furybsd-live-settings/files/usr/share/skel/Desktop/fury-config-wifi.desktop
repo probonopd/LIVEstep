@@ -8,4 +8,4 @@ Categories=
 Exec=doas /opt/local/bin/furybsd-wifi-tool
 Name=Configure Wifi
 Comment=Configure Wifi
-Icon=/usr/local/share/icons/Tango/scalable/devices/network-wireless.svg
+Icon=network-wireless

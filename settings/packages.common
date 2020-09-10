@@ -20,11 +20,8 @@ xinit
 setxkbmap
 xdg-user-dirs
 xdg-utils
-firefox
 doas
-icons-tango
 zenity
-sysctlview
 xterm
 git
 bash
