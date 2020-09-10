@@ -31,4 +31,4 @@ task:
     - ls -lh /usr/local/furybsd/iso/
     
   binaries_artifacts:
-    path: "/usr/local/furybsd/iso/*"
+    path: "/*.iso*"

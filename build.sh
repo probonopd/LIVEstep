@@ -16,6 +16,12 @@ base="${cache}/${version}/base"
 packages="${cache}/packages"
 ports="${cache}/furybsd-ports-master"
 iso="${livecd}/iso"
+  if [ ! -z "$CIRRUS_CI" ] ; then
+    # On Cirrus CI ${livecd} is in tmpfs for speed reasons
+    # and tends to run out of space. Writing the final ISO
+    # to non-tmpfs should be an acceptable compromise
+    iso="/"
+  fi
 uzip="${livecd}/uzip"
 cdroot="${livecd}/cdroot"
 ramdisk_root="${cdroot}/data/ramdisk"
@@ -262,6 +268,10 @@ image()
 
 cleanup()
 {
+  if [ ! -z "$CI" ] ; then
+    # On CI systems there is no reason to clean up which takes time
+    return
+  fi
   if [ -d "${livecd}" ] ; then
     # chflags -R noschg ${uzip} ${cdroot} >/dev/null 2>/dev/null
     rm -rf ${uzip} ${cdroot} ${ports} >/dev/null 2>/dev/null
