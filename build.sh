@@ -130,20 +130,20 @@ packages()
   mkdir ${uzip}/var/cache/pkg
   mount_nullfs ${packages} ${uzip}/var/cache/pkg
   mount -t devfs devfs ${uzip}/dev
-  cat "${cwd}/settings/packages.common" | xargs pkg-static -c "${uzip}" install -y
+  cat "${cwd}/settings/packages.common" | xargs /usr/local/sbin/pkg-static -c "${uzip}" install -y
   while read p; do
-    pkg-static -c ${uzip} install -y /var/cache/pkg/"${p}"-0.txz
+    /usr/local/sbin/pkg-static -c ${uzip} install -y /var/cache/pkg/"${p}"-0.txz
   done <"${cwd}"/settings/overlays.common
   # TODO: Show dependency tree so that we know why which pkgs get installed
-  # cat "${cwd}/settings/packages.common" | xargs pkg-static -c "${uzip}" info -d
-  # cat "${cwd}/settings/packages.${desktop}" | xargs pkg-static -c "${uzip}" info -d
-  cat ${cwd}/settings/packages.${desktop} | xargs pkg-static -c ${uzip} install -y
+  # cat "${cwd}/settings/packages.common" | xargs /usr/local/sbin/pkg-static -c "${uzip}" info -d
+  # cat "${cwd}/settings/packages.${desktop}" | xargs /usr/local/sbin/pkg-static -c "${uzip}" info -d
+  cat ${cwd}/settings/packages.${desktop} | xargs /usr/local/sbin/pkg-static -c ${uzip} install -y
   if [ -f "${cwd}/settings/overlays.${desktop}" ] ; then
     while read p; do
-      pkg-static -c ${uzip} install -y /var/cache/pkg/"${p}"-0.txz
+      /usr/local/sbin/pkg-static -c ${uzip} install -y /var/cache/pkg/"${p}"-0.txz
     done <"${cwd}/settings/overlays.${desktop}"
   fi
-  pkg-static -c ${uzip} info > "${cdroot}/data/system.uzip.packages"
+  /usr/local/sbin/pkg-static -c ${uzip} info > "${cdroot}/data/system.uzip.packages"
   rm ${uzip}/etc/resolv.conf
   umount ${uzip}/var/cache/pkg
   umount ${uzip}/dev
