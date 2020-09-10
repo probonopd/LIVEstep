@@ -91,6 +91,23 @@ workspace()
 
 base()
 {
+  if [ ! -f "${base}/base.txz" ] ; then 
+    cd ${base}
+    fetch http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/${version}-RELEASE/base.txz
+  fi
+  
+  if [ ! -f "${base}/kernel.txz" ] ; then
+    cd ${base}
+    fetch http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/${version}-RELEASE/kernel.txz
+  fi
+  cd ${base}
+  tar -zxvf base.txz -C ${uzip}
+  tar -zxvf kernel.txz -C ${uzip}
+  touch ${uzip}/etc/fstab
+}
+
+xxx_base()
+{
   export nonInteractive="YES"
   if [ ! -f "${base}/base.txz" ] ; then 
     bsdinstall distfetch
@@ -154,17 +171,6 @@ repos()
   # else
   #   cd ${cwd}/overlays/uzip/furybsd-common-settings && git pull
   # fi
-
-  # TODO: Move them to pkgs too, like common-settings
-  if [ ! -d "${cache}/furybsd-wallpapers" ] ; then
-    git clone https://github.com/furybsd/furybsd-wallpapers.git ${cache}/furybsd-wallpapers
-  else
-    cd ${cache}/furybsd-wallpapers && git pull
-  fi
-
-  cp -Rf ${cache}/furybsd-wallpapers/*.png ${cwd}/overlays/uzip/furybsd-wallpapers/files/opt/local/share/backgrounds/furybsd/
-
-
 }
 
 user()
