@@ -249,11 +249,16 @@ boot()
   cd "${uzip}" && tar -cf - boot | tar -xf - -C "${cdroot}"
 }
 
-image() 
+image()
 {
+  if [ ! -z "$CIRRUS_CI" ] ; then
+    # We are running on Circle CI where the tmpfs is not large enough
+    # to keep the packages while creating the ISO
+    rm -rf "${packages}"
+  fi
   sh ${cwd}/scripts/mkisoimages.sh -b $label $isopath ${cdroot}
   md5 $isopath > $isopath.md5
-}
+}  }
 
 cleanup()
 {
