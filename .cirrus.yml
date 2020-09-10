@@ -24,9 +24,10 @@ task:
     
   test_script:
     - /bin/sh -x ./build.sh || true # FIXME: Why does this return an error even though the ISO succeeded?
-    - ls -lh /*.iso*
+    - ls -lh "${CIRRUS_WORKING_DIR}"/*.iso*
     - df -h
-    - ( cd / ; zsyncmake *.iso )
+    - ( cd "${CIRRUS_WORKING_DIR}" ; zsyncmake *.iso )
     
   binaries_artifacts:
+    # Relative to ${CIRRUS_WORKING_DIR}
     path: "/*.iso*"
