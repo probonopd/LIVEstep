@@ -11,21 +11,6 @@ task:
   stateful: false
   timeout_in: 60m
 
-#  env:
-#    matrix:
-#      DESKTOP: 'lumina'
-#      DESKTOP: 'xfce'
-
-#  env:
-#    DESKTOP: xfce
-#    matrix:
-#      # We can use up to 8.0 CPUs for FreeBSD in parallel
-#      # DESKTOP: gnome
-#      # DESKTOP: kde
-#      DESKTOP: lumina
-#      # DESKTOP: mate
-#      DESKTOP: xfce
-
   install_script:
     - env
     - kldstat
