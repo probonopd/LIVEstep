@@ -29,9 +29,6 @@ vol="furybsd"
 label="FURYBSD"
 isopath="${iso}/${vol}.iso"
 export DISTRIBUTIONS="kernel.txz base.txz"
-export BSDINSTALL_DISTSITE="http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/12.1-RELEASE/"
-export BSDINSTALL_CHROOT="/usr/local/furybsd/uzip"
-export BSDINSTALL_DISTDIR="/usr/local/furybsd/cache/12.1/base"
 
 # Only run as superuser
 if [ "$(id -u)" != "0" ]; then
@@ -97,37 +94,22 @@ workspace()
 
 base()
 {
+  # TODO: Signature checking
   if [ ! -f "${base}/base.txz" ] ; then 
     cd ${base}
-    fetch http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/${version}-RELEASE/base.txz
+    # fetch http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/${version}-RELEASE/base.txz
+    fetch https://download.freebsd.org/ftp/releases/amd64/${version}-RELEASE/base.txz
   fi
   
   if [ ! -f "${base}/kernel.txz" ] ; then
     cd ${base}
-    fetch http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/${version}-RELEASE/kernel.txz
+    # fetch http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/${version}-RELEASE/kernel.txz
+    fetch https://download.freebsd.org/ftp/releases/amd64/${version}-RELEASE/kernel.txz
   fi
   cd ${base}
   tar -zxvf base.txz -C ${uzip}
   tar -zxvf kernel.txz -C ${uzip}
   touch ${uzip}/etc/fstab
-}
-
-xxx_base()
-{
-  export nonInteractive="YES"
-  if [ ! -f "${base}/base.txz" ] ; then 
-    bsdinstall distfetch
-  fi
-  
-  if [ ! -f "${base}/kernel.txz" ] ; then
-    cd ${base}
-    bsdinstall distfetch
-  fi
-  bsdinstall distextract
-  cp /etc/resolv.conf ${uzip}/etc/resolv.conf
-  chroot ${uzip} env PAGER=cat freebsd-update fetch --not-running-from-cron
-  chroot ${uzip} freebsd-update install
-  rm ${uzip}/etc/resolv.conf
 }
 
 packages()
