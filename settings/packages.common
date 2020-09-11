@@ -17,6 +17,7 @@ drm-kmod
 drm-legacy-kmod
 libva-intel-driver
 drm-kmod
+nvidia-driver
 mesa-libs
 mesa-dri
 open-vm-tools
