@@ -37,11 +37,13 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 # Make sure git is installed
-if [ ! -f "/usr/local/bin/git" ] ; then
-  echo "Git is required"
-  echo "Please install it with pkg install git or pkg install git-lite first"
-  exit 1
-fi
+# We only need this in case we decide to pull in ingredients from
+# other git repositories; this is currently not the case
+# if [ ! -f "/usr/local/bin/git" ] ; then
+#   echo "Git is required"
+#   echo "Please install it with pkg install git or pkg install git-lite first"
+#   exit 1
+# fi
 
 if [ -z "${desktop}" ] ; then
   export desktop=xfce
@@ -131,7 +133,8 @@ packages()
       /usr/local/sbin/pkg-static -c ${uzip} install -y /var/cache/pkg/"${p}"-0.txz
     done <"${cwd}/settings/overlays.${desktop}"
   fi
-  /usr/local/sbin/pkg-static -c ${uzip} info > "${cdroot}/data/system.uzip.packages"
+  /usr/local/sbin/pkg-static -c ${uzip} info > "${cdroot}/data/system.uzip.manifest"
+  cp "${cdroot}/data/system.uzip.manifest" "${isopath}.manifest"
   rm ${uzip}/etc/resolv.conf
   umount ${uzip}/var/cache/pkg
   umount ${uzip}/dev
@@ -239,11 +242,6 @@ boot()
 
 image()
 {
-  if [ ! -z "$CIRRUS_CI" ] ; then
-    # We are running on Circle CI where the tmpfs is not large enough
-    # to keep the packages while creating the ISO
-    rm -rf "${packages}"
-  fi
   sh ${cwd}/scripts/mkisoimages.sh -b $label $isopath ${cdroot}
   md5 $isopath > $isopath.md5
 }

@@ -19,13 +19,11 @@ task:
 
   install_script:
     - env
-    - kldstat
     - kldload zfs.ko
-    - kldload tmpfs.ko # Needed?
+    - kldload tmpfs.ko
     - kldload nullfs.ko
     - kldload geom_uzip.ko
-    - kldstat
-    - pkg install -y pkg git-lite zsync wget # qemu-devel uefi-edk2-qemu-x86_64
+    - pkg install -y pkg git-lite zsync wget bash # qemu-devel uefi-edk2-qemu-x86_64
     - mkdir -p /usr/local/furybsd
     - mount -t tmpfs tmpfs /usr/local/furybsd
     
@@ -37,4 +35,4 @@ task:
     - wget -c "https://raw.githubusercontent.com/probonopd/uploadtool/8142d461aba7b92a058116fe5ee75be438b75fa4/upload.sh"
     - export TRAVIS_COMMIT="${CIRRUS_CHANGE_IN_REPO}"
     - export TRAVIS_REPO_SLUG="${CIRRUS_REPO_FULL_NAME}"
-    - sh upload.sh "${CIRRUS_WORKING_DIR}"/*.iso*
+    - bash upload.sh "${CIRRUS_WORKING_DIR}"/*.iso* # This tool needs bash; FIXME
