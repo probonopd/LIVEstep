@@ -4,5 +4,5 @@ firefox
 icons-tango
 zenity
 sysctlview
-networkmgr
+# networkmgr
 gdm

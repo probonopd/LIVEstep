@@ -55,7 +55,7 @@ if [ -f "/usr/sbin/pciconf" ] ; then
   if [ $? -eq 0 ] ; then
     rm /etc/X11/xorg.conf >/dev/null 2>/dev/null
     cp /usr/home/liveuser/xorg.conf.d/driver-vmware.conf /etc/X11/xorg.conf >/dev/null 2>/dev/null
-    # /usr/sbin/sysrc -f /etc/rc.conf moused_enable="YES" >/dev/null 2>/dev/null
+    /usr/sbin/sysrc -f /etc/rc.conf moused_enable="YES" >/dev/null 2>/dev/null # Needed for VMware?
   else
     /usr/sbin/pkg delete -fy xf86-video-vmware >/dev/null 2>/dev/null
     /usr/sbin/pkg delete -fy xf86-input-vmmouse >/dev/null 2>/dev/null
