@@ -16,9 +16,10 @@ task:
     matrix:
       DESKTOP: 'lumina'
       DESKTOP: 'xfce'
-      matrix:
-        arch: 'amd64'
-        arch: 'i386'
+      env:
+        matrix:
+          arch: 'amd64'
+          arch: 'i386'
 
   install_script:
     - env
