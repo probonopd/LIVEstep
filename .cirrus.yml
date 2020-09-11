@@ -6,6 +6,7 @@ freebsd_instance:
 
 env:
   CIRRUS_CLONE_DEPTH: 1
+  GITHUB_TOKEN: ENCRYPTED[ed170fdbb21e31f2f09259d8e5ef007450794ee10d9f3a6387661ecd35d1f9b4d1f6a888d01f3d223e19582328bc6f9f]
 
 task:
   stateful: false
@@ -34,4 +35,6 @@ task:
     - df -h
     - ( cd "${CIRRUS_WORKING_DIR}" ; zsyncmake *.iso )
     - wget -c "https://raw.githubusercontent.com/probonopd/uploadtool/8142d461aba7b92a058116fe5ee75be438b75fa4/upload.sh"
+    - export TRAVIS_COMMIT="${CIRRUS_CHANGE_IN_REPO}"
+    - export TRAVIS_REPO_SLUG="${CIRRUS_REPO_FULL_NAME}"
     - sh upload.sh "${CIRRUS_WORKING_DIR}"/*.iso*
