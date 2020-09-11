@@ -37,10 +37,10 @@ add_user()
         echo "Passwords did not match!"
       fi
     done
-    echo "${username}:::::::::${password}" | adduser -f - && \
-      pw groupmod wheel -m "${username}" && \
-      pw groupmod video -m "${username}" && \
-      pw groupmod webcamd -m "${username}" && break
+    echo "${username}:::::::::${password}" | chroot "${FSMNT}" adduser -f - && \
+      chroot "${FSMNT}" pw groupmod wheel -m "${username}" && \
+      chroot "${FSMNT}" pw groupmod video -m "${username}" && \
+      chroot "${FSMNT}" pw groupmod webcamd -m "${username}" && break
   done
 }
 
