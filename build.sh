@@ -4,19 +4,21 @@
 set -e
 
 version="12.1"
-pkgset="branches/2020Q1"
+pkgset="branches/2020Q1" # TODO: Use it
 desktop=$1
 tag=$2
-cwd="`realpath | sed 's|/scripts||g'`"
+cwd=$(realpath | sed 's|/scripts||g')
 workdir="/usr/local"
 livecd="${workdir}/furybsd"
-cache="${livecd}/cache"
-arch=AMD64
+if [ -z "${arch}" ] ; then
+  arch=amd64
+fi
+cache="${livecd}/${arch}/cache"
 base="${cache}/${version}/base"
 packages="${cache}/packages"
 ports="${cache}/furybsd-ports-master"
 iso="${livecd}/iso"
-  if [ ! -z "$CIRRUS_CI" ] ; then
+  if [ -n "$CIRRUS_CI" ] ; then
     # On Cirrus CI ${livecd} is in tmpfs for speed reasons
     # and tends to run out of space. Writing the final ISO
     # to non-tmpfs should be an acceptable compromise
@@ -27,7 +29,6 @@ cdroot="${livecd}/cdroot"
 ramdisk_root="${cdroot}/data/ramdisk"
 vol="furybsd"
 label="FURYBSD"
-isopath="${iso}/${vol}.iso"
 export DISTRIBUTIONS="kernel.txz base.txz"
 
 # Only run as superuser
@@ -48,7 +49,8 @@ fi
 if [ -z "${desktop}" ] ; then
   export desktop=xfce
 fi
-export edition=$(echo $desktop | tr '[:lower:]' '[:upper:]')
+edition=$(echo $desktop | tr '[:lower:]' '[:upper:]')
+export edition
 if [ ! -f "${cwd}/settings/packages.${desktop}" ] ; then
   echo "${cwd}/settings/packages.${desktop} is missing, exiting"
   exit 1
@@ -65,7 +67,7 @@ else
 fi
 
 label="FURYBSD"
-isopath="${iso}/${vol}.iso"
+isopath="${iso}/${vol}-${arch}.iso"
 
 workspace()
 {
@@ -84,13 +86,13 @@ workspace()
     # chflags -R noschg ${uzip} ${cdroot} >/dev/null 2>/dev/null || true
     rm -rf ${uzip} ${cdroot} ${ports} >/dev/null 2>/dev/null || true
   fi
-  mkdir -p ${livecd} ${base} ${iso} ${packages} ${uzip} ${ramdisk_root}/dev ${ramdisk_root}/etc >/dev/null 2>/dev/null
-  truncate -s 3g ${livecd}/pool.img
-  mdconfig -f ${livecd}/pool.img -u 0
+  mkdir -p "${livecd}" "${base}" "${iso}" "${packages}" "${uzip}" "${ramdisk_root}/dev" "${ramdisk_root}/etc" >/dev/null 2>/dev/null
+  truncate -s 3g "${livecd}/pool.img"
+  mdconfig -f "${livecd}/pool.img" -u 0
   gpart create -s GPT md0
   gpart add -t freebsd-zfs md0
   zpool create furybsd /dev/md0p1
-  zfs set mountpoint=${uzip} furybsd
+  zfs set mountpoint="${uzip}" furybsd
   zfs set compression=gzip-6 furybsd
 }
 
@@ -99,14 +101,12 @@ base()
   # TODO: Signature checking
   if [ ! -f "${base}/base.txz" ] ; then 
     cd ${base}
-    # fetch http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/${version}-RELEASE/base.txz
-    fetch https://download.freebsd.org/ftp/releases/amd64/${version}-RELEASE/base.txz
+    fetch https://download.freebsd.org/ftp/releases/${arch}/${version}-RELEASE/base.txz
   fi
   
   if [ ! -f "${base}/kernel.txz" ] ; then
     cd ${base}
-    # fetch http://ftp.freebsd.org/pub/FreeBSD/releases/amd64/${version}-RELEASE/kernel.txz
-    fetch https://download.freebsd.org/ftp/releases/amd64/${version}-RELEASE/kernel.txz
+    fetch https://download.freebsd.org/ftp/releases/${arch}/${version}-RELEASE/kernel.txz
   fi
   cd ${base}
   tar -zxvf base.txz -C ${uzip}
@@ -121,15 +121,15 @@ packages()
   mount_nullfs ${packages} ${uzip}/var/cache/pkg
   mount -t devfs devfs ${uzip}/dev
   cat "${cwd}/settings/packages.common" | xargs /usr/local/sbin/pkg-static -c "${uzip}" install -y
-  while read p; do
+  while read -r p; do
     /usr/local/sbin/pkg-static -c ${uzip} install -y /var/cache/pkg/"${p}"-0.txz
   done <"${cwd}"/settings/overlays.common
   # TODO: Show dependency tree so that we know why which pkgs get installed
   # cat "${cwd}/settings/packages.common" | xargs /usr/local/sbin/pkg-static -c "${uzip}" info -d
   # cat "${cwd}/settings/packages.${desktop}" | xargs /usr/local/sbin/pkg-static -c "${uzip}" info -d
-  cat ${cwd}/settings/packages.${desktop} | xargs /usr/local/sbin/pkg-static -c ${uzip} install -y
+  cat "${cwd}/settings/packages.${desktop}" | xargs /usr/local/sbin/pkg-static -c "${uzip}" install -y
   if [ -f "${cwd}/settings/overlays.${desktop}" ] ; then
-    while read p; do
+    while read -r p; do
       /usr/local/sbin/pkg-static -c ${uzip} install -y /var/cache/pkg/"${p}"-0.txz
     done <"${cwd}/settings/overlays.${desktop}"
   fi
@@ -148,8 +148,8 @@ rc()
   if [ ! -f "${uzip}/etc/rc.conf.local" ] ; then
     touch ${uzip}/etc/rc.conf.local
   fi
-  cat ${cwd}/settings/rc.conf.common | xargs chroot ${uzip} sysrc -f /etc/rc.conf.local
-  cat ${cwd}/settings/rc.conf.${desktop} | xargs chroot ${uzip} sysrc -f /etc/rc.conf.local
+  cat "${cwd}/settings/rc.conf.common" | xargs chroot "${uzip}" sysrc -f /etc/rc.conf.local
+  cat "${cwd}/settings/rc.conf.${desktop}" | xargs chroot "${uzip}" sysrc -f /etc/rc.conf.local
 }
 
 
@@ -162,6 +162,7 @@ repos()
   # else
   #   cd ${cwd}/overlays/uzip/furybsd-common-settings && git pull
   # fi
+  true
 }
 
 user()
@@ -197,17 +198,16 @@ dm()
   esac
 }
 
+# Generate on-the-fly packages for the selected overlays
 pkg()
 {
   cd "${packages}"
-  while read p; do
-    echo "pkg #########################"
-    sh -ex "${cwd}"/scripts/build-pkg.sh -m "${cwd}"/overlays/uzip/"${p}"/manifest -d "${cwd}"/overlays/uzip/"${p}/files"
+  while read -r p; do
+    sh -ex "${cwd}/scripts/build-pkg.sh" -m "${cwd}/overlays/uzip/${p}"/manifest -d "${cwd}/overlays/uzip/${p}/files"
   done <"${cwd}"/settings/overlays.common
   if [ -f "${cwd}/settings/overlays.${desktop}" ] ; then
-    while read p; do
-      echo "pkg #########################"
-      sh -ex "${cwd}"/scripts/build-pkg.sh -m "${cwd}"/overlays/uzip/"${p}"/manifest -d "${cwd}"/overlays/uzip/"${p}/files"
+    while read -r p; do
+      sh -ex "${cwd}/scripts/build-pkg.sh" -m "${cwd}/overlays/uzip/${p}"/manifest -d "${cwd}/overlays/uzip/${p}/files"
     done <"${cwd}/settings/overlays.${desktop}"
   fi
   cd -
@@ -225,7 +225,7 @@ uzip()
 
 ramdisk() 
 {
-  cp -R ${cwd}/overlays/ramdisk/ ${ramdisk_root}
+  cp -R "${cwd}/overlays/ramdisk/" "${ramdisk_root}"
   cd "${uzip}" && tar -cf - rescue | tar -xf - -C "${ramdisk_root}"
   touch "${ramdisk_root}/etc/fstab"
   cp ${uzip}/etc/login.conf ${ramdisk_root}/etc/login.conf
@@ -236,14 +236,14 @@ ramdisk()
 
 boot() 
 {
-  cp -R ${cwd}/overlays/boot/ ${cdroot}
+  cp -R "${cwd}/overlays/boot/" "${cdroot}"
   cd "${uzip}" && tar -cf - boot | tar -xf - -C "${cdroot}"
 }
 
 image()
 {
-  sh ${cwd}/scripts/mkisoimages.sh -b $label $isopath ${cdroot}
-  md5 $isopath > $isopath.md5
+  sh "${cwd}/scripts/mkisoimages.sh" -b "${label}" "${isopath}" "${cdroot}"
+  md5 "${isopath}" > "${isopath}.md5"
 }
 
 cleanup()

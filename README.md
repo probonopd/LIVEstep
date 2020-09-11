@@ -30,12 +30,6 @@ root@FreeBSD:/ # curl -L "https://github.com/probonopd/furybsd-livecd/releases/d
 * VGA capable of 1024x768 screen resolution 
 * Either a CD/DVD drive or a USB port for booting the installer media
 
-## Install packages required for build system
-
-```
-pkg install git
-```
-
 ## Customize (optional)
 
 Add more packages to XFCE edition:

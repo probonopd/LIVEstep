@@ -13,6 +13,12 @@ xf86-video-scfb
 xf86-video-vesa
 xf86-video-vmware
 xf86-video-qxl
+drm-kmod
+drm-legacy-kmod
+libva-intel-driver
+drm-kmod
+mesa-libs
+mesa-dri
 open-vm-tools
 virtualbox-ose-additions
 xauth

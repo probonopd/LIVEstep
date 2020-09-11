@@ -1,10 +1,48 @@
-#!/usr/local/bin/bash
+#!/bin/sh
+
+# Only run as superuser
+if [ "$(id -u)" != "0" ]; then
+  echo "This script must be run as root" 1>&2
+  exit 1
+fi
 
 # Export our variables
 LIVEFS="/"
 FSMNT="/mnt"
-SRCPOOL="livecd"
 DESTPOOL=$(zpool list -H | grep /mnt | awk -F '\t' '{print $1;}')
+
+# Hide the complexities of bsdinstall user creation,
+# just ask for username and password
+add_user()
+{
+  while true; do
+    echo ""
+    echo "Add User"
+    echo "This user will be added to the video, wheel, and webcamd groups."
+      while true; do
+      echo "Username: "
+      read -r username
+      if echo "${username}" | grep -q -E "^[a-z][-a-z0-9]*$"; then
+        break;
+      else
+         echo "Username not valid"
+      fi
+    done
+    while true; do
+      echo "New Password: "; stty -echo; read -r password; stty echo; echo ""
+      echo "Retype New Password: "; stty -echo; read -r password2; stty echo; echo ""
+      if [ "${password}" = "${password2}" ]; then
+        break;
+      else
+        echo "Passwords did not match!"
+      fi
+    done
+    echo "${username}:::::::::${password}" | adduser -f - && \
+      pw groupmod wheel -m "${username}" && \
+      pw groupmod video -m "${username}" && \
+      pw groupmod webcamd -m "${username}" && break
+  done
+}
 
 # Cleanup memory devices created before reroot if they exist
 if [ -e "/dev/md0" ] ; then
@@ -16,7 +54,7 @@ fi
 
 # Clean up any previous runs
 umount -f ${FSMNT}/dev >/dev/null 2>/dev/null || true
-zpool export -f ${DESTPOOL} >/dev/null 2>/dev/null || true
+zpool export -f "${DESTPOOL}" >/dev/null 2>/dev/null || true
 
 # Install contents of read only uzip to destination pool
 bsdinstall hostname
@@ -26,34 +64,24 @@ if [ ! -d "/mnt/usr" ] ; then
 fi
 
 # Clone the file system to disk with cpdup
-cpdup -i0 -s0 -v ${LIVEFS} ${FSMNT}
+cpdup -i0 -s0 -v "${LIVEFS}" "${FSMNT}"
 
 bsdinstall config
 cat /etc/rc.conf | xargs sysrc -f ${FSMNT}/etc/rc.conf
 bsdinstall entropy
 
 # Cleanup LiveCD restore specific contents from destination pool
+chroot "${FSMNT}" pkg remove -y furybsd-live-settings
 # TODO: Move all of this to the pre-deinstall section of the pkg manifests that have installed these things
-chroot ${FSMNT} cp /usr/local/etc/lightdm/lightdm.conf.sample /usr/local/etc/lightdm/lightdm.conf || true
-chroot ${FSMNT} rm /usr/local/etc/sddm.conf || true
-chroot ${FSMNT} cp /usr/local/etc/gdm/custom.conf.sample /usr/local/etc/gdm/custom.conf || true
-chroot ${FSMNT} rm /etc/rc.conf.local
-chroot ${FSMNT} pw userdel liveuser
-chroot ${FSMNT} pw groupdel liveuser
-chroot ${FSMNT} rm -rf /usr/home/liveuser
-chroot ${FSMNT} pkg remove -y furybsd-live-settings #####
-# chroot ${FSMNT} rm /usr/local/bin/furybsd-live-helper
-# chroot ${FSMNT} rm /usr/local/bin/furybsd-init-helper
-# chroot ${FSMNT} rm /usr/local/bin/furybsd-install
-# chroot ${FSMNT} rm /usr/local/etc/xdg/autostart/fury-helper.desktop
+chroot "${FSMNT}" rm /etc/rc.conf.local
+chroot "${FSMNT}" pw userdel liveuser
+chroot "${FSMNT}" pw groupdel liveuser
+chroot "${FSMNT}" rm -rf /usr/home/liveuser
 
 # Configure the new installation
 mount -t devfs devfs ${FSMNT}/dev
 bsdinstall rootpass
-# TODO: Hide the complexities of bsdinstall in a nice wrapper script that just asks for username and password
-# especially the part about the video, wheel, and webcamd groups
-dialog --title "Warning" --msgbox 'Please invite your user to video, wheel, and webcamd groups!' 6 65
-bsdinstall adduser
+add_user
 bsdinstall time
 
 # Enable additional services needed for desktop
@@ -72,7 +100,7 @@ fi
 
 # Cleanup and reboot
 echo "Installation finished!"
-read -p "Press any key to reboot... " -n1 -s
-umount -f ${FSMNT}/dev >/dev/null 2>/dev/null || true
-zpool export -f ${DESTPOOL} >/dev/null 2>/dev/null || true
+read -r "Press any key to reboot... " -n1 -s
+umount -f "${FSMNT}/dev" >/dev/null 2>/dev/null || true
+zpool export -f "${DESTPOOL}" >/dev/null 2>/dev/null || true
 shutdown -r now
