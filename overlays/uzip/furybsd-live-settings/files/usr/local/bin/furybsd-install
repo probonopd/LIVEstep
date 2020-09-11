@@ -100,7 +100,8 @@ fi
 
 # Cleanup and reboot
 echo "Installation finished!"
-read -r "Press any key to reboot... " -n1 -s
+echo "Press any key to reboot..."
+read -r reboot
 umount -f "${FSMNT}/dev" >/dev/null 2>/dev/null || true
 zpool export -f "${DESTPOOL}" >/dev/null 2>/dev/null || true
 shutdown -r now
