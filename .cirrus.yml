@@ -16,7 +16,6 @@ task:
     matrix:
       DESKTOP: 'lumina'
       DESKTOP: 'xfce'
-      DESKTOP: 'kde'
       DESKTOP: 'mate'
 
   env:
