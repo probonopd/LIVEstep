@@ -82,3 +82,4 @@ fi
 /usr/sbin/sysrc -f /etc/rc.conf allscreens_kbdflags="-b quiet.off"
 /usr/sbin/sysrc -f /etc/rc.conf dhcpcd_enable="YES" >/dev/null 2>/dev/null
 /usr/sbin/sysrc -f /etc/rc.conf webcamd_enable="YES" >/dev/null 2>/dev/null
+/usr/sbin/sysrc -f /etc/rc.conf avahi_enable="YES" >/dev/null 2>/dev/null
